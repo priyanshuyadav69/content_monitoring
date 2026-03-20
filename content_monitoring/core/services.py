@@ -1,3 +1,4 @@
+from django.utils.dateparse import parse_datetime
 from .models import Keyword, ContentItem, Flag
 
 def calculate_score(keyword, content):
@@ -49,10 +50,14 @@ def run_scan():
     keywords = Keyword.objects.all()
 
     for item in mock_data:
-        content, _ = ContentItem.objects.get_or_create(
+        item['last_updated'] = parse_datetime(item['last_updated'])
+        content, created = ContentItem.objects.get_or_create(
             title=item['title'],
             defaults=item
         )
+        if not created:
+            content.last_updated = item['last_updated']
+            content.save()
 
         for keyword in keywords:
             score = calculate_score(keyword.name, content)
